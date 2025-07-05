@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GAP FILLERS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: 'Orbitron', sans-serif;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    video.bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      object-fit: cover;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 20px;
+      width: 90vw;
+      height: 90vh;
+      margin: auto;
+      padding-top: 5vh;
+    }
+
+    .card {
+      perspective: 1000px;
+      position: relative;
+      transition: all 0.5s ease-in-out;
+      z-index: 1;
+      cursor: pointer;
+    }
+
+    .card:hover:not(.disabled):not(.enlarged) {
+      box-shadow: 0 0 30px 10px #9900ff;
+      border: 2px solid #9900ff;
+      border-radius: 16px;
+      animation: breathingGlow 2.5s ease-in-out infinite;
+    }
+
+    @keyframes breathingGlow {
+      0%, 100% {
+        box-shadow: 0 0 30px 10px #9900ff;
+      }
+      50% {
+        box-shadow: 0 0 50px 20px #bb66ff;
+      }
+    }
+
+    .card.enlarged {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1.05);
+      width: 80vw;
+      height: 80vh;
+      z-index: 1000;
+      backdrop-filter: blur(15px);
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s;
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 16px;
+      border: 4px solid transparent;
+      transition: border-color 0.3s;
+      flex-direction: column;
+    }
+
+    .card-front {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 2em;
+    }
+
+    .card-back {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #b700ff;
+      transform: rotateY(180deg);
+      padding: 20px;
+      font-size: 1.2em;
+    }
+
+    .card-back button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #00ffcc;
+      border: none;
+      border-radius: 6px;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .glow {
+      border-color: #9900ff !important;
+      box-shadow: 0 0 30px 15px #9900ff;
+      border-radius: 20px;
+      animation: breathingGlow 2.5s ease-in-out infinite;
+    }
+
+    @keyframes breathingGlow {
+      0%, 100% {
+        box-shadow: 0 0 30px 15px #9900ff;
+      }
+      50% {
+        box-shadow: 0 0 50px 25px #bb66ff;
+      }
+    }
+
+    .controls {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    .controls button {
+      padding: 15px 30px;
+      font-size: 1em;
+      border: none;
+      border-radius: 10px;
+      background: #9900ff;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card-back {
+      color: #9900ff;
+    }
+    .card-back button {
+      background: #9900ff;
+      color: #000;
+    }
+    .card-back button:hover {
+      background: #7a00cc;
+    }
+    .controls button:hover {
+      background: #7a00cc;
+    }
+
+    .controls button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px #ae00ff;
+    }
+
+    .card.disabled-permanent {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .card.disabled-permanent .card-front {
+      content: 'X';
+      font-size: 3em;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <video class="bg-video" autoplay muted loop>
+    <source src="background.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <div class="controls">
+    <button onclick="randomPick()">Random Pick</button>
+  </div>
+
+  <div class="container" id="grid">
+    <!-- Cards will be generated here -->
+  </div>
+
+  <div id="poster-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+    <div style="position:relative; max-width:80vw; max-height:80vh;">
+      <img id="poster-image" src="" alt="Poster" style="width:100%; height:100%; object-fit:contain; border-radius: 20px; box-shadow: 0 0 30px 10px #9900ff;" />
+      <button id="close-poster-btn" style="position:absolute; top:10px; right:10px; padding:10px 20px; font-size:1em; border:none; border-radius:10px; background:rgba(153, 0, 255, 0.7); color:#fff; cursor:pointer;">Close</button>
+    </div>
+  </div>
+
+  <style>
+    @keyframes fadeMergeFromBottomLeft {
+      0% {
+        opacity: 0;
+        transform: translate(-50px, 50px) scale(0.8);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+    }
+
+    .fade-merge-animation {
+      animation: fadeMergeFromBottomLeft 3s ease forwards;
+      transform-origin: bottom left;
+    }
+  </style>
+
+  <script>
+    const questions = [
+      "The woman suspects her husband is cheating after he loses his job. A family friend convinced her to track him down using forbidden talents.",
+      "A hotshot celebrity does community service.",
+      "A devoted Christian does very creative sermons, where each sermon he does consists of a particular theme. The police are not at all happy about it and try to manhunt him down.",
+      "An old man abducts a young Asian boy to replace his dead wife",
+      "A guy falls in love with a girl from his church, but misses his shot, so he marries her younger sister.",
+      "After getting turned down on a shady deal, some guy gets a bunch of people in trouble, and they all hold hands. He also took a really long time to open some box.",
+      "A giant monster keeps messing up a guy's life again and again.",
+      "The protagonist lives in a world all alone. The protagonist leaves his world and starts living in a world filled with fat people.",
+      "A guy doesn't kill a man, but he may have tied the wrong knot and maybe killed the man's wife. Anyway, in the end, the guy's brother gets hanged.",
+      "A man gets stranded in the middle of nowhere and is left all alone. Later, he makes a lot of friends who are around.",
+      "Son gets kidnapped by collectors and is forcefully put on display while his dad searches for him with a mentally ill girl he found.",
+      "A guy learns to destroy a country and ends up hating himself for it."
+    ];
+
+    const grid = document.getElementById('grid');
+    const posterModal = document.getElementById('poster-modal');
+    const posterImage = document.getElementById('poster-image');
+    const closePosterBtn = document.getElementById('close-poster-btn');
+
+    questions.forEach((question, index) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.index = index;
+      card.innerHTML = `
+        <div class="card-inner">
+          <div class="card-front">?</div>
+          <div class="card-back">
+            ${question}<br>
+            <button onclick="showAnswer(event, ${index})">Answer</button>
+            <button onclick="closeCard(event)">Close</button>
+          </div>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        if (!card.classList.contains('flipped') && !card.classList.contains('disabled-permanent')) {
+          card.classList.add('flipped');
+          card.classList.add('enlarged');
+        }
+      });
+      grid.appendChild(card);
+    });
+
+    function showAnswer(e, index) {
+      e.stopPropagation();
+      // Show poster image corresponding to question index (1.png to 12.png)
+      posterImage.src = `${index + 1}.png`;
+      posterModal.style.display = 'flex';
+      posterImage.classList.remove('fade-merge-animation');
+      void posterImage.offsetWidth; // trigger reflow to restart animation
+      posterImage.classList.add('fade-merge-animation');
+    }
+
+    closePosterBtn.addEventListener('click', () => {
+      posterModal.style.display = 'none';
+      posterImage.src = '';
+      posterImage.classList.remove('fade-merge-animation');
+    });
+
+    posterModal.addEventListener('click', (e) => {
+      if (e.target === posterModal) {
+        posterModal.style.display = 'none';
+        posterImage.src = '';
+        posterImage.classList.remove('fade-merge-animation');
+      }
+    });
+
+    function closeCard(e) {
+      e.stopPropagation();
+      const card = e.target.closest('.card');
+      card.classList.remove('flipped', 'enlarged');
+      card.classList.add('disabled-permanent');
+      const front = card.querySelector('.card-front');
+      front.textContent = 'X';
+      front.style.color = 'red';
+      front.style.fontSize = '3em';
+    }
+
+    async function randomPick() {
+      const cards = document.querySelectorAll('.card:not(.disabled-permanent)');
+      if (cards.length === 0) return;
+
+      for (let card of document.querySelectorAll('.card')) {
+        card.classList.remove('glow');
+      }
+
+      let times = Math.floor(Math.random() * 10) + 10;
+      for (let i = 0; i < times; i++) {
+        const rand = Math.floor(Math.random() * cards.length);
+        const card = cards[rand];
+        card.classList.add('glow');
+        await new Promise(r => setTimeout(r, 150));
+        card.classList.remove('glow');
+      }
+
+      const finalIndex = Math.floor(Math.random() * cards.length);
+      const finalCard = cards[finalIndex];
+      finalCard.classList.add('glow');
+      setTimeout(() => {
+        finalCard.classList.add('flipped', 'enlarged');
+      }, 400);
+    }
+  </script>
+</body>
+</html>
